@@ -22,4 +22,9 @@ public class Knight extends Piece{
                         BufferedImage.SCALE_SMOOTH
                 );
     }
+
+    //Special move of Knight
+    public boolean isValidMovement(int col, int row){
+        return Math.abs(col - this.col) * Math.abs(row - this.row) == 2;
+    }
 }

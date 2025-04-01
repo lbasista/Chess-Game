@@ -33,6 +33,9 @@ public class Piece {
         this.board = board;
     }
 
+    public boolean isValidMovement(int col, int row) {return true;}
+    public boolean moveCollidesWithPiece(int col, int row) {return false;}
+
     public  void paint(Graphics2D g2d){
         //Center figure on square
         int drawX = xPos + (board.tileSize - sprite.getWidth(null)) / 2;
