@@ -23,7 +23,7 @@ public class Knight extends Piece{
                 );
     }
 
-    //Special move of Knight
+    //Special move of Knight (L-shape)
     public boolean isValidMovement(int col, int row){
         return Math.abs(col - this.col) * Math.abs(row - this.row) == 2;
     }
