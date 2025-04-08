@@ -35,6 +35,16 @@ public class Pawn extends Piece {
         } else if (Math.abs(col - this.col) == 1 && row == this.row + moveDir && board.getPiece(col, row) != null) { //Capture
             return true;
         }
+
+        //en passant left
+        if (board.getTileNum(col, row) == board.enPassantTile && col == this.col - 1 && row == this.row + moveDir && board.getPiece(col, row - moveDir) != null) {
+            return true;
+        }
+        //en passant right
+        if (board.getTileNum(col, row) == board.enPassantTile && col == this.col + 1 && row == this.row + moveDir && board.getPiece(col, row - moveDir) != null) {
+            return true;
+        }
+
         return false;
     }
 }
