@@ -123,4 +123,21 @@ public class CheckScanner {
         }
         return false;
     }
+
+    public boolean isGameOver(Piece king) {
+        for (Piece piece : board.pieceList) {
+            if (board.sameTeam(piece, king)) {
+                board.selectedPiece = piece == king ? king : null;
+                for (int row = 0; row < board.rows; row++) {
+                    for (int col = 0; col < board.cols; col++) {
+                        Move move = new Move(board, piece, col, row);
+                        if (board.isValidMove(move)) {
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+        return true;
+    }
 }
