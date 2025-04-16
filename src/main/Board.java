@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 
 public class Board extends JPanel {
     private JLabel turnLabel;
+    private JLabel fenLabel;
     //Size of tile
     final public int tileSize = 85;
 
@@ -25,12 +26,19 @@ public class Board extends JPanel {
     public CheckScanner checkScanner = new CheckScanner(this);
 
     public int enPassantTile = -1;
+    public String enPassantTarget = "-";
 
     private boolean isWhiteToMove = true;
     private boolean isGameOver = false;
 
-    public Board(JLabel turnLabel){
+    private int fiftyMoveCounter = 0;
+
+    public int halfmoveClock = 0;
+    public int fullmoveNumber = 1;
+
+    public Board(JLabel turnLabel, JLabel fenLabel){
         this.turnLabel = turnLabel;
+        this.fenLabel = fenLabel;
         this.setPreferredSize(new Dimension(cols * tileSize, rows * tileSize));
         this.addMouseListener(input);
         this.addMouseMotionListener(input);
@@ -56,6 +64,8 @@ public class Board extends JPanel {
         } else if (move.piece.name.equals("King")) {
             moveKing(move);
         }
+        capture(move.capture);
+
         move.piece.col = move.newCol;
         move.piece.row = move.newRow;
         move.piece.xPos = move.newCol * tileSize;
@@ -63,12 +73,42 @@ public class Board extends JPanel {
 
         move.piece.isFirstMove = false;
 
-        capture(move.capture);
-
         isWhiteToMove = !isWhiteToMove; //Changing color to move
         this.turnLabel.setText("Current player: " + (isWhiteToMove ? "White" : "Black"));
         updateGameState();
+
+        //50 Moves
+        if (move.capture != null || move.piece.name.equals("Pawn")) {
+            fiftyMoveCounter = 0;
+        } else {
+            fiftyMoveCounter += 1;
+        }
+
+        //enPassant
+        if (move.piece.name.equals("Pawn") && Math.abs(move.newRow - move.piece.row) == 2) {
+            int enPassantRow = (move.piece.row + move.newRow) / 2;
+            char colChar = (char) ('a' + move.newCol);
+            enPassantTarget = "" + colChar + (8 - enPassantRow);
+        } else {
+            enPassantTarget = "-";
+        }
+
+        //Halfmove
+        if (move.piece.name.equals("Pawn") || move.capture != null) {
+            halfmoveClock = 0; //Reset if captured or pawn
+        } else {
+            halfmoveClock += 1;
+        }
+        if(!isWhiteToMove) {
+            fullmoveNumber += 1;
+        }
+        fenLabel.setText("FEN: " + toFEN());
     }
+
+    private boolean wCanCastleKing = true;
+    private boolean wCanCastleQueen = true;
+    private boolean bCanCastleKing = true;
+    private boolean bCanCastleQueen = true;
 
     private void moveKing(Move move) {
         //If kings move 2 squares (Castling)
@@ -79,15 +119,35 @@ public class Board extends JPanel {
                 rook.col = 5;
                 rook.xPos = 5 * tileSize;
                 rook.isFirstMove = false;
+                //Update castling status
+                if (move.piece.isWhite) {
+                    wCanCastleKing = false;
+                } else {
+                    bCanCastleKing = false;
+                }
             } else if (move.newCol == 2) {
                 //Long castling (0-0-0)
                 Piece rook = getPiece(0, move.piece.row);
                 rook.col = 3;
                 rook.xPos = 3 * tileSize;
                 rook.isFirstMove = false;
+                //Update castling status
+                if (move.piece.isWhite) {
+                    wCanCastleQueen = false;
+                } else {
+                    bCanCastleQueen = false;
+                }
             }
         }
         move.piece.isFirstMove = false;
+        //Update castling status for both sides when king moves
+        if (move.piece.isWhite) {
+            wCanCastleKing = false;
+            wCanCastleQueen = false;
+        } else {
+            bCanCastleKing = false;
+            bCanCastleQueen = false;
+        }
     }
 
     private void movePawn(Move move) {
@@ -239,6 +299,11 @@ public class Board extends JPanel {
             this.turnLabel.setText("Insufficient Material");
             isGameOver = true;
         }
+        if (fiftyMoveCounter >= 100) { //50 moves (one color) = 100 half-moves (both colors)
+            this.turnLabel.setText("Draw by 50-move rule");
+            isGameOver = true;
+            return;
+        }
     }
 
     private boolean insufficientMaterial(boolean isWhite) {
@@ -250,6 +315,82 @@ public class Board extends JPanel {
             return false;
         }
         return names.size() < 3;
+    }
+
+    public String toFEN() {
+        StringBuilder fen = new StringBuilder();
+        for (int row = 0; row < 8; row++) {
+            int emptyCount = 0;
+            for (int col = 0; col < 8; col++) {
+                Piece piece = getPiece(col, row);
+                if (piece == null) {
+                    emptyCount += 1;
+                } else {
+                    if (emptyCount > 0) {
+                        fen.append(emptyCount);
+                        emptyCount = 0;
+                    }
+                    //Piece char
+                    fen.append(getFENChar(piece));
+                }
+            }
+            if (emptyCount > 0) {
+                fen.append(emptyCount);
+            }
+            if (row < 7) {
+                fen.append("/");
+            }
+        }
+
+        //White or black player?
+        fen.append(" " + (isWhiteToMove ? "w" : "b"));
+
+        // Castling rights
+        String castlingRights = "";
+        if (wCanCastleKing) {
+            castlingRights += "K";
+        }
+        if (wCanCastleQueen) {
+            castlingRights += "Q";
+        }
+        if (bCanCastleKing) {
+            castlingRights += "k";
+        }
+        if (bCanCastleQueen) {
+            castlingRights += "q";
+        }
+        if (castlingRights.isEmpty()) {
+            castlingRights = "-";
+        }
+        fen.append(" " + castlingRights);
+
+        //enPassant
+        fen.append(" " + enPassantTarget);
+
+        //Half/Fullmoves
+        fen.append(" " + halfmoveClock + " " + fullmoveNumber);
+
+        return fen.toString();
+    }
+
+
+    public char getFENChar(Piece piece) {
+        switch (piece.name) { //White: P, Black: p
+            case "Pawn":
+                return piece.isWhite ? 'P' : 'p';
+            case "Rook":
+                return piece.isWhite ? 'R' : 'r';
+            case "Knight":
+                return piece.isWhite ? 'N' : 'n';
+            case "Bishop":
+                return piece.isWhite ? 'B' : 'b';
+            case "Queen":
+                return piece.isWhite ? 'Q' : 'q';
+            case "King":
+                return piece.isWhite ? 'K' : 'k';
+            default:
+                return ' ';
+        }
     }
 
     public void paintComponent(Graphics g){
