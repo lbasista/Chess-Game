@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 public class Board extends JPanel {
-
+    private JLabel turnLabel;
     //Size of tile
     final public int tileSize = 85;
 
@@ -29,7 +29,8 @@ public class Board extends JPanel {
     private boolean isWhiteToMove = true;
     private boolean isGameOver = false;
 
-    public Board(){
+    public Board(JLabel turnLabel){
+        this.turnLabel = turnLabel;
         this.setPreferredSize(new Dimension(cols * tileSize, rows * tileSize));
         this.addMouseListener(input);
         this.addMouseMotionListener(input);
@@ -55,17 +56,18 @@ public class Board extends JPanel {
         } else if (move.piece.name.equals("King")) {
             moveKing(move);
         }
-            move.piece.col = move.newCol;
-            move.piece.row = move.newRow;
-            move.piece.xPos = move.newCol * tileSize;
-            move.piece.yPos = move.newRow * tileSize;
+        move.piece.col = move.newCol;
+        move.piece.row = move.newRow;
+        move.piece.xPos = move.newCol * tileSize;
+        move.piece.yPos = move.newRow * tileSize;
 
-            move.piece.isFirstMove = false;
+        move.piece.isFirstMove = false;
 
-            capture(move.capture);
+        capture(move.capture);
 
-            isWhiteToMove = !isWhiteToMove; //Changing color to move
-            updateGameState();
+        isWhiteToMove = !isWhiteToMove; //Changing color to move
+        this.turnLabel.setText("Current player: " + (isWhiteToMove ? "White" : "Black"));
+        updateGameState();
     }
 
     private void moveKing(Move move) {
@@ -228,13 +230,13 @@ public class Board extends JPanel {
         if (checkScanner.isGameOver(king)) {
             Move kingCurrentPosition = new Move(this, king, king.col, king.row);
             if (checkScanner.isKingChecked(kingCurrentPosition)) {
-                System.out.println(isWhiteToMove ? "Black Wins!" : "White Wins!");
+                this.turnLabel.setText(isWhiteToMove ? "Black wins!" : "White wins!");
             } else {
-                System.out.println("Stalemate");
+                this.turnLabel.setText("Stalemate");
             }
             isGameOver = true;
         } else if (insufficientMaterial(true) && insufficientMaterial(false)) {
-            System.out.println("Insufficient Material");
+            this.turnLabel.setText("Insufficient Material");
             isGameOver = true;
         }
     }
@@ -307,11 +309,5 @@ public class Board extends JPanel {
         for (Piece piece : pieceList) {
             piece.paint(g2d);
         }
-        //Information about current turn
-        g2d.setColor(Color.BLACK);
-        g2d.setFont(new Font("Arial", Font.BOLD, 16));
-        String turnInfo = "Waiting for: " + (isWhiteToMove ? "White" : "Black");
-        int textWidth = g2d.getFontMetrics().stringWidth(turnInfo);
-        g2d.drawString(turnInfo, (cols * tileSize - textWidth) / 2, 20);
     }
 }
