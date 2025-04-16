@@ -5,7 +5,6 @@ import pieces.*;
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.stream.Collectors;
 
 public class Board extends JPanel {
@@ -70,17 +69,23 @@ public class Board extends JPanel {
     }
 
     private void moveKing(Move move) {
+        //If kings move 2 squares (Castling)
         if (Math.abs(move.piece.col - move.newCol) == 2) {
-            Piece rook;
-            if (move.piece.col < move.newCol) {
-                rook = getPiece(7, move.piece.row);
+            //Short castling (0-0)
+            if (move.newCol == 6) {
+                Piece rook = getPiece(7, move.piece.row);
                 rook.col = 5;
-            } else {
-                rook = getPiece(0, move.piece.row);
+                rook.xPos = 5 * tileSize;
+                rook.isFirstMove = false;
+            } else if (move.newCol == 2) {
+                //Long castling (0-0-0)
+                Piece rook = getPiece(0, move.piece.row);
                 rook.col = 3;
+                rook.xPos = 3 * tileSize;
+                rook.isFirstMove = false;
             }
-            rook.xPos = rook.col * tileSize;
         }
+        move.piece.isFirstMove = false;
     }
 
     private void movePawn(Move move) {
@@ -130,6 +135,43 @@ public class Board extends JPanel {
         }
         if (checkScanner.isKingChecked(move) && move.piece.name.equals("King")) {
             return false;
+        }
+        if (move.piece.name.equals("King") && Math.abs(move.piece.col - move.newCol) == 2) {
+            return isValidCastling(move);
+        }
+        return true;
+    }
+
+    public boolean isValidCastling(Move move) {
+        //Only king during 1st move
+        if (!move.piece.name.equals("King") || !move.piece.isFirstMove) {
+            return false;
+        }
+        //Direction of castling
+        boolean isShortCastle = (move.newCol == 6);
+        int rookCol = isShortCastle ? 7 : 0;
+        Piece rook = getPiece(rookCol, move.piece.row);
+
+        //Does rook still on board and don't move already?
+        if (rook == null || !rook.name.equals("Rook") || !rook.isFirstMove) {
+            return false;
+        }
+
+        //Are squares empty between king and rook?
+        int start = Math.min(move.piece.col, rookCol) + 1;
+        int end = Math.max(move.piece.col, rookCol);
+        for (int col = start; col < end; col++) {
+            if (getPiece(col, move.piece.row) != null) {
+                return false;
+            }
+        }
+        //Is king checked and not moving thru attack
+        int step = (move.newCol > move.piece.col) ? 1 : -1;
+        for (int col = move.piece.col; col != move.newCol + step; col += step) {
+            Move testMove = new Move(this, move.piece, col, move.piece.row);
+            if (checkScanner.isKingChecked(testMove)) {
+                return false;
+            }
         }
         return true;
     }
@@ -218,17 +260,46 @@ public class Board extends JPanel {
                 g2d.setColor((c + r) % 2 == 0 ? new Color(248, 247, 249) : new Color(146, 220, 229));
                 //Draw squares
                 g2d.fillRect(c*tileSize, r*tileSize, tileSize, tileSize);
+                //Legend on board
+                if (r == 7) { // Dolna krawędź (A-H)
+                    g2d.setColor(Color.BLACK);
+                    g2d.setFont(new Font("Arial", Font.BOLD, 10));
+                    g2d.drawString(Character.toString((char)('A' + c)),
+                            c * tileSize + tileSize / 2,
+                            r * tileSize + tileSize - 5);
+                }
+                if (c == 0) { // Lewa krawędź (1-8)
+                    g2d.setColor(Color.BLACK);
+                    g2d.setFont(new Font("Arial", Font.BOLD, 10));
+                    g2d.drawString(Integer.toString(8 - r),
+                            5,
+                            r * tileSize + tileSize / 2);
+                }
             }
         }
 
-        //Highlight empty tiles
+        //Highlight possible moves
         if (selectedPiece != null) {
+            //Standard moves
             for (int r = 0; r < rows; r++) {
                 for (int c = 0; c < cols; c++) {
                     if (isValidMove(new Move(this, selectedPiece, c, r))) {
-                        g2d.setColor(new Color(0, 230, 65, 153));
+                        g2d.setColor(new Color(0, 230, 65, 150));
                         g2d.fillRect(c * tileSize, r * tileSize, tileSize, tileSize);
                     }
+                }
+            }
+            //Castling for King
+            if (selectedPiece.name.equals("King") && selectedPiece.isFirstMove) {
+                //Short (O-O)
+                if (isValidMove(new Move(this, selectedPiece, 6, selectedPiece.row))) {
+                    g2d.setColor(new Color(245, 255, 100, 190));
+                    g2d.fillRect(6 * tileSize, selectedPiece.row * tileSize, tileSize, tileSize);
+                }
+                //Long (O-O-O)
+                if (isValidMove(new Move(this, selectedPiece, 2, selectedPiece.row))) {
+                    g2d.setColor(new Color(245, 255, 100, 190));
+                    g2d.fillRect(2 * tileSize, selectedPiece.row * tileSize, tileSize, tileSize);
                 }
             }
         }
@@ -236,5 +307,11 @@ public class Board extends JPanel {
         for (Piece piece : pieceList) {
             piece.paint(g2d);
         }
+        //Information about current turn
+        g2d.setColor(Color.BLACK);
+        g2d.setFont(new Font("Arial", Font.BOLD, 16));
+        String turnInfo = "Waiting for: " + (isWhiteToMove ? "White" : "Black");
+        int textWidth = g2d.getFontMetrics().stringWidth(turnInfo);
+        g2d.drawString(turnInfo, (cols * tileSize - textWidth) / 2, 20);
     }
 }
