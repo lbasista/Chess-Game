@@ -36,7 +36,10 @@ public class Board extends JPanel {
     public int halfmoveClock = 0;
     public int fullmoveNumber = 1;
 
+    private Clock clock = new Clock();
+
     public Board(JLabel turnLabel, JLabel fenLabel){
+        clock.startGame();
         this.turnLabel = turnLabel;
         this.fenLabel = fenLabel;
         this.setPreferredSize(new Dimension(cols * tileSize, rows * tileSize));
@@ -44,6 +47,10 @@ public class Board extends JPanel {
         this.addMouseMotionListener(input);
 
         addPieces();
+    }
+
+    public Clock getClock() {
+        return clock;
     }
 
     public Piece getPiece(int col, int row){
@@ -74,6 +81,7 @@ public class Board extends JPanel {
         move.piece.isFirstMove = false;
 
         isWhiteToMove = !isWhiteToMove; //Changing color to move
+        clock.switchTurn();
         this.turnLabel.setText("Current player: " + (isWhiteToMove ? "White" : "Black"));
         updateGameState();
 
@@ -391,6 +399,19 @@ public class Board extends JPanel {
             default:
                 return ' ';
         }
+    }
+
+    public void resetGame() {
+        pieceList.clear();
+        addPieces();
+        isWhiteToMove = true;
+        isGameOver = false;
+        selectedPiece = null;
+        turnLabel.setText("Current player: White");
+        fenLabel.setText("FEN: " + toFEN());
+        clock = new Clock();
+        clock.startGame();
+        repaint();
     }
 
     public void paintComponent(Graphics g){
