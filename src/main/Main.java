@@ -4,17 +4,28 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.io.IOException;
+import java.io.InputStream;
 
 public class Main {
     private static Language language;
     public static void main(String[] args){
+        Font pixelFont = null;
+        try {
+            InputStream importFont = Main.class.getResourceAsStream("/res/Jersey10-Regular.ttf");
+            pixelFont = Font.createFont(Font.TRUETYPE_FONT, importFont).deriveFont(30f);
+        } catch (FontFormatException | IOException e) {
+            e.printStackTrace();
+        }
+
         JFrame frame = new JFrame();
-        frame.setTitle("Chess Game");
+        frame.setTitle("Psiachy");
         Color backColor = new Color(10, 95, 95);
         Color barColor = new Color(100, 95, 95);
         Color buttonColor = new Color(70, 130, 180);
         Color barColorVertical = new Color(20, 100, 75);
         Font barFontHorizontal = new Font("Arial", Font.BOLD, 20);
+
         Font barFontVertical = new Font("Arial", Font.BOLD, 24);
         Font buttonFont = new Font("Arial", Font.BOLD, 16);
         frame.getContentPane().setBackground(backColor);
@@ -50,7 +61,7 @@ public class Main {
         topPanel.setBackground(barColor);
 
         JLabel turnLabel = new JLabel("Current player: White", SwingConstants.CENTER);
-        turnLabel.setFont(barFontHorizontal);
+        turnLabel.setFont(pixelFont);
         turnLabel.setForeground(Color.WHITE);
         topPanel.add(turnLabel, barTextPos);
 
@@ -69,7 +80,7 @@ public class Main {
         //Bottom Panel
         JPanel bottomPanel = new JPanel(new GridBagLayout());
         bottomPanel.setBackground(barColor);
-        fenLabel.setFont(barFontHorizontal);
+        fenLabel.setFont(pixelFont);
         fenLabel.setForeground(Color.WHITE);
         //Centered
         bottomPanel.add(fenLabel, barTextPos);
@@ -87,29 +98,37 @@ public class Main {
         wClockPanel.setBackground(barColorVertical);
         JLabel btTag = new JLabel("Black:", SwingConstants.CENTER);
         btTag.setForeground(Color.WHITE);
+        btTag.setFont(pixelFont);
         btTag.setPreferredSize(new Dimension(80, 30));
         JLabel gtTag = new JLabel("Game:", SwingConstants.CENTER);
         gtTag.setForeground(Color.WHITE);
+        gtTag.setFont(pixelFont);
         gtTag.setPreferredSize(new Dimension(80, 30));
         JLabel wtTag = new JLabel("White:", SwingConstants.CENTER);
         wtTag.setForeground(Color.WHITE);
         wtTag.setPreferredSize(new Dimension(80, 30));
+        wtTag.setFont(pixelFont);
 
         //Black timer
         JLabel blackClock = new JLabel(String.valueOf(board.getClock().getBlackTime()), SwingConstants.CENTER);
-        blackClock.setFont(barFontVertical);
+        blackClock.setFont(pixelFont);
         blackClock.setForeground(Color.WHITE);
         bClockPanel.add(btTag, sideTextPos);
         bClockPanel.add(blackClock, sideTextPos);
         //Game timer
         JLabel gameClock = new JLabel(String.valueOf(board.getClock().getTotalGameTime()), SwingConstants.CENTER);
-        gameClock.setFont(barFontVertical);
+        gameClock.setFont(pixelFont);
         gameClock.setForeground(Color.WHITE);
         gClockPanel.add(gtTag, sideTextPos);
         gClockPanel.add(gameClock, sideTextPos);
+        //Check detector
+        JLabel isCheck = new JLabel(board.isCheck ? "Check" : "", SwingConstants.CENTER);
+        isCheck.setFont(pixelFont);
+        isCheck.setForeground(Color.WHITE);
+        gClockPanel.add(isCheck, sideTextPos);
         //White timer
         JLabel whiteClock = new JLabel(String.valueOf(board.getClock().getWhiteTime()), SwingConstants.CENTER);
-        whiteClock.setFont(barFontVertical);
+        whiteClock.setFont(pixelFont);
         whiteClock.setForeground(Color.WHITE);
         wClockPanel.add(wtTag, sideTextPos);
         wClockPanel.add(whiteClock, sideTextPos);
@@ -126,16 +145,19 @@ public class Main {
         leftPanel.setBackground(barColorVertical);
 
         //Reset button
-        JButton restartButton = new JButton("Restart game");
+        JButton restartButton = new JButton("Restart");
         restartButton.addActionListener(e -> {
             board.resetGame();
         });
         sideTextPos.gridy = 0;
         restartButton.setBackground(buttonColor);
         restartButton.setForeground(Color.WHITE);
-        restartButton.setFont(buttonFont);
+
+        // Ustaw czcionkę po przypisaniu tekstu
+        restartButton.setFont(pixelFont);
         restartButton.setFocusPainted(false);
         leftPanel.add(restartButton, sideTextPos);
+
 
         //Language button
         language = new Language(turnLabel, btTag, gtTag, wtTag);
@@ -146,7 +168,7 @@ public class Main {
         sideTextPos.gridy = 1;
         langButton.setBackground(buttonColor);
         langButton.setForeground(Color.WHITE);
-        langButton.setFont(buttonFont);
+        langButton.setFont(pixelFont);
         restartButton.setFocusPainted(false);
         leftPanel.add(langButton, sideTextPos);
 
@@ -179,6 +201,7 @@ public class Main {
         //Game
         Timer gameTimer = new Timer(1000, e -> {
             gameClock.setText(String.valueOf(board.getClock().getTotalGameTime() / 1000));
+            isCheck.setText(board.isCheck ? "Check" : "");
         });
         gameTimer.start();
 

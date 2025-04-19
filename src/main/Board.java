@@ -31,6 +31,8 @@ public class Board extends JPanel {
     private boolean isWhiteToMove = true;
     private boolean isGameOver = false;
 
+    public boolean isCheck = false;
+
     private int fiftyMoveCounter = 0;
 
     public int halfmoveClock = 0;
@@ -188,27 +190,37 @@ public class Board extends JPanel {
     }
 
     public boolean isValidMove(Move move){
-        if (isGameOver) {
-            return false;
+        if (isGameOver) return false;
+        if (move.piece.isWhite != isWhiteToMove) return false;
+        if (sameTeam(move.piece, move.capture)) return false;
+        if (!move.piece.isValidMovement(move.newCol, move.newRow)) return false;
+        if (move.piece.moveCollidesWithPiece(move.newCol, move.newRow)) return false;
+
+        //Move simulaton
+        Piece originalCapture = move.capture;
+        int oldCol = move.piece.col;
+        int oldRow = move.piece.row;
+
+        move.piece.col = move.newCol;
+        move.piece.row = move.newRow;
+        pieceList.remove(originalCapture);
+
+        boolean kingInCheck = checkScanner.isKingInCheck(move.piece.isWhite);
+
+        //Undo move
+        move.piece.col = oldCol;
+        move.piece.row = oldRow;
+        if (originalCapture != null) {
+            pieceList.add(originalCapture);
         }
-        if (move.piece.isWhite != isWhiteToMove) {
-            return false;
-        }
-        if (sameTeam(move.piece, move.capture)) {
-            return false;
-        }
-        if (!move.piece.isValidMovement(move.newCol, move.newRow)) {
-            return false;
-        }
-        if (move.piece.moveCollidesWithPiece(move.newCol, move.newRow)) {
-            return false;
-        }
-        if (checkScanner.isKingChecked(move) && move.piece.name.equals("King")) {
-            return false;
-        }
+
+        if (kingInCheck) return false;
+
+        //Castling
         if (move.piece.name.equals("King") && Math.abs(move.piece.col - move.newCol) == 2) {
             return isValidCastling(move);
         }
+
         return true;
     }
 
@@ -240,6 +252,7 @@ public class Board extends JPanel {
         for (int col = move.piece.col; col != move.newCol + step; col += step) {
             Move testMove = new Move(this, move.piece, col, move.piece.row);
             if (checkScanner.isKingChecked(testMove)) {
+                this.turnLabel.setText(isWhiteToMove ? "Black wins!" : "White wins!");
                 return false;
             }
         }
@@ -295,22 +308,50 @@ public class Board extends JPanel {
 
     private void updateGameState() {
         Piece king = findKing(isWhiteToMove);
-        if (checkScanner.isGameOver(king)) {
-            Move kingCurrentPosition = new Move(this, king, king.col, king.row);
-            if (checkScanner.isKingChecked(kingCurrentPosition)) {
-                this.turnLabel.setText(isWhiteToMove ? "Black wins!" : "White wins!");
+        if (king == null) {
+            this.turnLabel.setText(isWhiteToMove ? "Black wins!" : "White wins!");
+            isGameOver = true;
+            return;
+        }
+
+        // Sprawdź, czy król ma jakiekolwiek legalne ruchy
+        boolean hasLegalMoves = false;
+        for (Piece piece : pieceList) {
+            if (piece.isWhite == isWhiteToMove) {
+                for (int row = 0; row < 8; row++) {
+                    for (int col = 0; col < 8; col++) {
+                        Move move = new Move(this, piece, col, row);
+                        if (isValidMove(move)) {
+                            hasLegalMoves = true;
+                            break;
+                        }
+                    }
+                    if (hasLegalMoves) break;
+                }
+                if (hasLegalMoves) break;
+            }
+        }
+
+        if (!hasLegalMoves) {
+            //Move kingPosition = new Move(this, king, king.col, king.row);
+            isCheck = checkScanner.isKingInCheck(isWhiteToMove);
+            if (isCheck) {
+                this.turnLabel.setText(isWhiteToMove ? "Black wins!" : "White wins!"); // Mat
             } else {
-                this.turnLabel.setText("Stalemate");
+                this.turnLabel.setText("Stalemate"); // Pat
             }
             isGameOver = true;
         } else if (insufficientMaterial(true) && insufficientMaterial(false)) {
             this.turnLabel.setText("Insufficient Material");
             isGameOver = true;
-        }
-        if (fiftyMoveCounter >= 100) { //50 moves (one color) = 100 half-moves (both colors)
+        } else if (fiftyMoveCounter >= 100) {
             this.turnLabel.setText("Draw by 50-move rule");
             isGameOver = true;
-            return;
+        }
+
+        if (isGameOver) {
+            clock.switchTurn(); // Zatrzymaj zegar
+            repaint(); // Wymuś odświeżenie
         }
     }
 

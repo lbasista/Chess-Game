@@ -90,7 +90,7 @@ public class CheckScanner {
     }
 
     private boolean checkPawnAttacks(Piece king, int kingCol, int kingRow) {
-        int direction = king.isWhite ? 1 : -1;
+        int direction = king.isWhite ? -1 : 1;
         int[][] attacks = {{-1, direction}, {1, direction}};
 
         for (int[] attack : attacks) {
@@ -139,5 +139,19 @@ public class CheckScanner {
             }
         }
         return true;
+    }
+
+    public boolean isKingInCheck(boolean isWhite) {
+        Piece king = board.findKing(isWhite);
+        if (king == null) return false;
+
+        int kingCol = king.col;
+        int kingRow = king.row;
+
+        return checkStraightLines(king, kingCol, kingRow) ||
+                checkDiagonals(king, kingCol, kingRow) ||
+                checkKnightAttacks(king, kingCol, kingRow) ||
+                checkPawnAttacks(king, kingCol, kingRow) ||
+                checkKingAttacks(king, kingCol, kingRow);
     }
 }

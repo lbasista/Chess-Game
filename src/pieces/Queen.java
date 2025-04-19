@@ -2,7 +2,9 @@ package pieces;
 
 import main.Board;
 
+import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
 
 public class Queen extends Piece{
     public Queen(Board board, int col, int row, boolean isWhite){
@@ -15,12 +17,21 @@ public class Queen extends Piece{
         this.name = "Queen";
 
         //Scale of piece
-        this.sprite = sheet.getSubimage(sheetScale, isWhite ? 0: sheetScale, sheetScale, sheetScale)
-                .getScaledInstance(
-                        (int) (board.tileSize * 0.9),
-                        (int) (board.tileSize * 0.9),
-                        BufferedImage.SCALE_SMOOTH
-                );
+//        this.sprite = sheet.getSubimage(sheetScale, isWhite ? 0: sheetScale, sheetScale, sheetScale)
+//                .getScaledInstance(
+//                        (int) (board.tileSize * 0.9),
+//                        (int) (board.tileSize * 0.9),
+//                        BufferedImage.SCALE_SMOOTH
+//                );
+        try {
+            BufferedImage dogImage = ImageIO.read(ClassLoader.getSystemResourceAsStream(isWhite ? "Krolowa_biala.png" : "Krolowa_czarna.png"));
+            this.sprite = dogImage.getScaledInstance(
+                    (int) (board.tileSize * 0.9),
+                    (int) (board.tileSize * 0.9),
+                    BufferedImage.SCALE_SMOOTH );
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     //Special move of Queen (Vertically, horizontally or diagonally (combined Rook and Bishop))
