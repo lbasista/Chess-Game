@@ -8,9 +8,12 @@ import java.io.IOException;
 import java.io.InputStream;
 
 public class Main {
+    private static JPanel mainMenu;
+    private static CardLayout cardLayout;
     private static Language language;
-    public static void main(String[] args){
-        Font pixelFont = null;
+    private static Font pixelFont;
+
+    public static void main(String[] args) {
         try {
             InputStream importFont = Main.class.getResourceAsStream("/res/Jersey10-Regular.ttf");
             pixelFont = Font.createFont(Font.TRUETYPE_FONT, importFont).deriveFont(30f);
@@ -20,14 +23,65 @@ public class Main {
 
         JFrame frame = new JFrame();
         frame.setTitle("Psiachy");
+        cardLayout = new CardLayout();
+        mainMenu = new JPanel(cardLayout);
+
+        mainMenu.add(createMenuPanel(frame), "MENU");
+        mainMenu.add(createGamePanel(frame), "GAME");
+
+        frame.setContentPane(mainMenu);
+        frame.setSize(1080, 1000);
+        frame.setMinimumSize(new Dimension(1080, 1000));
+        frame.setLocationRelativeTo(null);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setVisible(true);
+    }
+
+    private static JPanel createMenuPanel(JFrame frame) {
+        JPanel menuPanel = new JPanel();
+        menuPanel.setBackground(new Color(20, 100, 75));
+        menuPanel.setLayout(new BoxLayout(menuPanel, BoxLayout.Y_AXIS));
+
+        JLabel title = new JLabel("Psiachy");
+        title.setAlignmentX(Component.CENTER_ALIGNMENT);
+        title.setFont(pixelFont.deriveFont(75f));
+        title.setForeground(new Color(240, 220, 200));
+
+        JButton playButton = new JButton("Play");
+        playButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        playButton.setFont(pixelFont);
+        playButton.addActionListener(e -> cardLayout.show(mainMenu, "GAME"));
+        playButton.setBackground(new Color(70, 130, 180));
+        playButton.setForeground(Color.WHITE);
+        playButton.setFocusPainted(false);
+
+        JButton exitButton = new JButton("Exit");
+        exitButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        exitButton.setFont(pixelFont);
+        exitButton.addActionListener(e -> frame.dispose());
+        exitButton.setBackground(new Color(70, 130, 180));
+        exitButton.setForeground(Color.WHITE);
+        exitButton.setFocusPainted(false);
+
+        menuPanel.add(Box.createVerticalGlue());
+        menuPanel.add(title);
+        menuPanel.add(Box.createRigidArea(new Dimension(0, 20)));
+        menuPanel.add(playButton);
+        menuPanel.add(Box.createRigidArea(new Dimension(0, 20)));
+        menuPanel.add(exitButton);
+        menuPanel.add(Box.createVerticalGlue());
+
+        return menuPanel;
+    }
+
+    private static JPanel createGamePanel(JFrame frame) {
+        JPanel gamePanel = new JPanel(new BorderLayout());
+
         Color backColor = new Color(10, 95, 95);
         Color barColor = new Color(100, 95, 95);
         Color buttonColor = new Color(70, 130, 180);
         Color barColorVertical = new Color(20, 100, 75);
-        Font barFontHorizontal = new Font("Arial", Font.BOLD, 20);
 
-        Font barFontVertical = new Font("Arial", Font.BOLD, 24);
-        Font buttonFont = new Font("Arial", Font.BOLD, 16);
         frame.getContentPane().setBackground(backColor);
         //Fen bar
         JLabel fenLabel = new JLabel("", SwingConstants.CENTER);
@@ -155,9 +209,7 @@ public class Main {
 
         // Ustaw czcionkę po przypisaniu tekstu
         restartButton.setFont(pixelFont);
-        restartButton.setFocusPainted(false);
         leftPanel.add(restartButton, sideTextPos);
-
 
         //Language button
         language = new Language(turnLabel, btTag, gtTag, wtTag);
@@ -182,10 +234,6 @@ public class Main {
         mainPanel.add(bottomPanel, BorderLayout.SOUTH);
         mainPanel.add(rightPanel, BorderLayout.EAST);
         mainPanel.add(leftPanel, BorderLayout.WEST);
-
-        //Frame content
-        frame.add(mainPanel);
-        frame.setVisible(true);
 
         //Update clocks
         //White
@@ -219,5 +267,6 @@ public class Main {
                 mainPanel.revalidate();
             }
         });
+        return mainPanel;
     }
 }
