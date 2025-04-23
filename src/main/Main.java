@@ -12,6 +12,10 @@ public class Main {
     private static CardLayout cardLayout;
     private static Font pixelFont;
     private static TiledGifPanel background;
+    private static Color backColor = new Color(56, 148, 111);
+    private static Color fontColor = new Color(255, 240, 219);
+    private static Color buttonColor = new Color(63, 185, 136);
+    private static Color buttonBorderColor = new Color(75, 104, 47);
 
     public static void main(String[] args) {
         try {
@@ -21,7 +25,7 @@ public class Main {
             e.printStackTrace();
         }
 
-        background = new TiledGifPanel("/res/Logo.jpg");
+        background = new TiledGifPanel("/res/Logo.jpg", 19, true);
 
         JFrame frame = new JFrame();
         frame.setIconImage(Toolkit.getDefaultToolkit().getImage(Main.class.getResource("/res/Logo.jpg")));
@@ -46,31 +50,84 @@ public class Main {
         JLabel title = new JLabel("Psiachy");
         title.setAlignmentX(Component.CENTER_ALIGNMENT);
         title.setFont(pixelFont.deriveFont(75f));
-        title.setForeground(new Color(240, 220, 200));
+        title.setForeground(fontColor);
+
+        JLabel author = new JLabel("Łukasz Basista");
+        author.setAlignmentX(Component.CENTER_ALIGNMENT);
+        author.setFont(pixelFont.deriveFont(16f));
+        author.setForeground(fontColor);
 
         JButton playButton = new JButton("Play");
         playButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         playButton.setFont(pixelFont);
         playButton.addActionListener(e -> cardLayout.show(mainMenu, "GAME"));
-        playButton.setBackground(new Color(70, 130, 180));
-        playButton.setForeground(Color.WHITE);
+        playButton.setBackground(buttonColor);
+        playButton.setForeground(fontColor);
         playButton.setFocusPainted(false);
+        playButton.setBorder(BorderFactory.createLineBorder(buttonBorderColor, 3));
+        playButton.setMaximumSize(new Dimension(150, 45));
+
+        JButton settingsButton = new JButton("Settings");
+        settingsButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        settingsButton.setFont(pixelFont);
+        settingsButton.addActionListener(e -> {});
+        settingsButton.setBackground(buttonColor);
+        settingsButton.setForeground(fontColor);
+        settingsButton.setFocusPainted(false);
+        settingsButton.setBorder(BorderFactory.createLineBorder(buttonBorderColor, 3));
+        settingsButton.setMaximumSize(new Dimension(150, 45));
 
         JButton exitButton = new JButton("Exit");
         exitButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         exitButton.setFont(pixelFont);
         exitButton.addActionListener(e -> frame.dispose());
-        exitButton.setBackground(new Color(70, 130, 180));
-        exitButton.setForeground(Color.WHITE);
+        exitButton.setBackground(buttonColor);
+        exitButton.setForeground(fontColor);
         exitButton.setFocusPainted(false);
+        exitButton.setBorder(BorderFactory.createLineBorder(buttonBorderColor, 3));
+        exitButton.setMaximumSize(new Dimension(150, 45));
+
+        JPanel buttonsPanel = new JPanel();
+        buttonsPanel.setLayout(new BoxLayout(buttonsPanel, BoxLayout.Y_AXIS));
+        buttonsPanel.setOpaque(false);
+        buttonsPanel.add(title);
+        buttonsPanel.add(Box.createRigidArea(new Dimension(0, 2)));
+        buttonsPanel.add(author);
+        buttonsPanel.add(Box.createRigidArea(new Dimension(0, 50)));
+        buttonsPanel.add(playButton);
+        buttonsPanel.add(Box.createRigidArea(new Dimension(0, 20)));
+        buttonsPanel.add(settingsButton);
+        buttonsPanel.add(Box.createRigidArea(new Dimension(0, 20)));
+        buttonsPanel.add(exitButton);
+
+        // Zielony pasek na całą wysokość pod przyciskami, nieco szerszy niż tytuł
+        JPanel backBar = new JPanel();
+        backBar.setBackground(backColor);
+        backBar.setMaximumSize(new Dimension(300, Integer.MAX_VALUE)); // ← szerszy pasek
+        backBar.setPreferredSize(new Dimension(275, 0));
+        backBar.setAlignmentX(0.5f); // ← wyśrodkowanie w overlayu
+        backBar.setOpaque(true);
+
+        // Overlay: pasek pod przyciskami
+        JPanel overlayPanel = new JPanel();
+        overlayPanel.setLayout(new OverlayLayout(overlayPanel));
+        overlayPanel.setOpaque(false);
+        overlayPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        overlayPanel.add(buttonsPanel);
+        overlayPanel.add(backBar);
+
+        // Wyśrodkowanie w poziomie
+        JPanel centerAlignWrapper = new JPanel();
+        centerAlignWrapper.setLayout(new BoxLayout(centerAlignWrapper, BoxLayout.X_AXIS));
+        centerAlignWrapper.setOpaque(false);
+        centerAlignWrapper.add(Box.createHorizontalGlue());
+        centerAlignWrapper.add(overlayPanel);
+        centerAlignWrapper.add(Box.createHorizontalGlue());
 
         background.removeAll();
+        background.setLayout(new BoxLayout(background, BoxLayout.Y_AXIS));
         background.add(Box.createVerticalGlue());
-        background.add(title);
-        background.add(Box.createRigidArea(new Dimension(0, 20)));
-        background.add(playButton);
-        background.add(Box.createRigidArea(new Dimension(0, 20)));
-        background.add(exitButton);
+        background.add(centerAlignWrapper);
         background.add(Box.createVerticalGlue());
 
         return background;
@@ -82,7 +139,6 @@ public class Main {
         Color backColor = new Color(10, 95, 95);
         Color barColor = new Color(100, 95, 95);
         Color buttonColor = new Color(70, 130, 180);
-        Color barColorVertical = new Color(20, 100, 75);
 
         frame.getContentPane().setBackground(backColor);
         //Fen bar
@@ -142,7 +198,7 @@ public class Main {
         bottomPanel.add(fenLabel, barTextPos);
 
         //Right panel
-        TiledGifPanel rightPanel = new TiledGifPanel("/res/Logo.jpg");
+        TiledGifPanel rightPanel = new TiledGifPanel("/res/Logo.jpg", 15, false);
         rightPanel.setLayout(new GridBagLayout());
         rightPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
@@ -197,7 +253,7 @@ public class Main {
         rightPanel.add(wClockPanel, sideTextPos);
 
         //Left panel
-        TiledGifPanel leftPanel = new TiledGifPanel("/res/Logo.jpg");
+        TiledGifPanel leftPanel = new TiledGifPanel("/res/Logo.jpg", 15, false);
         leftPanel.setLayout(new GridBagLayout());
 
         //Reset button
