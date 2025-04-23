@@ -10,8 +10,8 @@ import java.io.InputStream;
 public class Main {
     private static JPanel mainMenu;
     private static CardLayout cardLayout;
-    private static Language language;
     private static Font pixelFont;
+    private static TiledGifPanel background;
 
     public static void main(String[] args) {
         try {
@@ -21,7 +21,10 @@ public class Main {
             e.printStackTrace();
         }
 
+        background = new TiledGifPanel("/res/Logo.jpg");
+
         JFrame frame = new JFrame();
+        frame.setIconImage(Toolkit.getDefaultToolkit().getImage(Main.class.getResource("/res/Logo.jpg")));
         frame.setTitle("Psiachy");
         cardLayout = new CardLayout();
         mainMenu = new JPanel(cardLayout);
@@ -37,10 +40,8 @@ public class Main {
         frame.setVisible(true);
     }
 
-    private static JPanel createMenuPanel(JFrame frame) {
-        JPanel menuPanel = new JPanel();
-        menuPanel.setBackground(new Color(20, 100, 75));
-        menuPanel.setLayout(new BoxLayout(menuPanel, BoxLayout.Y_AXIS));
+    private static JComponent createMenuPanel(JFrame frame) {
+        background.setLayout(new BoxLayout(background, BoxLayout.Y_AXIS));
 
         JLabel title = new JLabel("Psiachy");
         title.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -63,15 +64,16 @@ public class Main {
         exitButton.setForeground(Color.WHITE);
         exitButton.setFocusPainted(false);
 
-        menuPanel.add(Box.createVerticalGlue());
-        menuPanel.add(title);
-        menuPanel.add(Box.createRigidArea(new Dimension(0, 20)));
-        menuPanel.add(playButton);
-        menuPanel.add(Box.createRigidArea(new Dimension(0, 20)));
-        menuPanel.add(exitButton);
-        menuPanel.add(Box.createVerticalGlue());
+        background.removeAll();
+        background.add(Box.createVerticalGlue());
+        background.add(title);
+        background.add(Box.createRigidArea(new Dimension(0, 20)));
+        background.add(playButton);
+        background.add(Box.createRigidArea(new Dimension(0, 20)));
+        background.add(exitButton);
+        background.add(Box.createVerticalGlue());
 
-        return menuPanel;
+        return background;
     }
 
     private static JPanel createGamePanel(JFrame frame) {
@@ -140,16 +142,16 @@ public class Main {
         bottomPanel.add(fenLabel, barTextPos);
 
         //Right panel
-        JPanel rightPanel = new JPanel(new GridBagLayout());
-        rightPanel.setBackground(barColorVertical);
+        TiledGifPanel rightPanel = new TiledGifPanel("/res/Logo.jpg");
+        rightPanel.setLayout(new GridBagLayout());
         rightPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         JPanel bClockPanel = new JPanel(new GridBagLayout());
-        bClockPanel.setBackground(barColorVertical);
+        bClockPanel.setOpaque(false);
         JPanel gClockPanel = new JPanel(new GridBagLayout());
-        gClockPanel.setBackground(barColorVertical);
+        gClockPanel.setOpaque(false);
         JPanel wClockPanel = new JPanel(new GridBagLayout());
-        wClockPanel.setBackground(barColorVertical);
+        wClockPanel.setOpaque(false);
         JLabel btTag = new JLabel("Black:", SwingConstants.CENTER);
         btTag.setForeground(Color.WHITE);
         btTag.setFont(pixelFont);
@@ -195,8 +197,8 @@ public class Main {
         rightPanel.add(wClockPanel, sideTextPos);
 
         //Left panel
-        JPanel leftPanel = new JPanel(new GridBagLayout());
-        leftPanel.setBackground(barColorVertical);
+        TiledGifPanel leftPanel = new TiledGifPanel("/res/Logo.jpg");
+        leftPanel.setLayout(new GridBagLayout());
 
         //Reset button
         JButton restartButton = new JButton("Restart");
@@ -211,18 +213,21 @@ public class Main {
         restartButton.setFont(pixelFont);
         leftPanel.add(restartButton, sideTextPos);
 
-        //Language button
-        language = new Language(turnLabel, btTag, gtTag, wtTag);
-
-        JButton langButton = new JButton("PL/EN");
-        langButton.addActionListener(e -> language.toggleLanguage());
+        JButton menuButton = new JButton("Menu");
+        menuButton.addActionListener(e -> {
+            new InGameMenu(frame, pixelFont,
+                    () -> {}, //Resume)
+                    () -> {}, //Settings)
+                    () -> cardLayout.show(mainMenu, "MENU")
+            ).setVisible(true);
+        });
 
         sideTextPos.gridy = 1;
-        langButton.setBackground(buttonColor);
-        langButton.setForeground(Color.WHITE);
-        langButton.setFont(pixelFont);
+        menuButton.setBackground(buttonColor);
+        menuButton.setForeground(Color.WHITE);
+        menuButton.setFont(pixelFont);
         restartButton.setFocusPainted(false);
-        leftPanel.add(langButton, sideTextPos);
+        leftPanel.add(menuButton, sideTextPos);
 
         //Empty space
         sideTextPos.gridy = 2;

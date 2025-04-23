@@ -2,7 +2,9 @@ package pieces;
 
 import main.Board;
 
+import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
 
 public class Knight extends Piece{
     public Knight(Board board, int col, int row, boolean isWhite){
@@ -15,12 +17,22 @@ public class Knight extends Piece{
         this.name = "Knight";
 
         //Scale of piece
-        this.sprite = sheet.getSubimage(3 * sheetScale, isWhite ? 0: sheetScale, sheetScale, sheetScale)
-                .getScaledInstance(
-                        (int) (board.tileSize * 0.9),
-                        (int) (board.tileSize * 0.9),
-                        BufferedImage.SCALE_SMOOTH
-                );
+//        this.sprite = sheet.getSubimage(3 * sheetScale, isWhite ? 0: sheetScale, sheetScale, sheetScale)
+//                .getScaledInstance(
+//                        (int) (board.tileSize * 0.9),
+//                        (int) (board.tileSize * 0.9),
+//                        BufferedImage.SCALE_SMOOTH
+//                );
+
+        try {
+            BufferedImage dogImage = ImageIO.read(ClassLoader.getSystemResourceAsStream(isWhite ? "Kon_bialy.png" : "Kon_czarny.png"));
+            this.sprite = dogImage.getScaledInstance(
+                    (int) (board.tileSize * 0.9),
+                    (int) (board.tileSize * 0.9),
+                    BufferedImage.SCALE_SMOOTH );
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     //Special move of Knight (L-shape)
