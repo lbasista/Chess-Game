@@ -2,10 +2,7 @@ package pieces;
 
 import main.Board;
 import main.Move;
-
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
-import java.io.IOException;
+import main.PieceSpriteManager;
 
 public class King extends Piece{
     public King(Board board, int col, int row, boolean isWhite){
@@ -17,23 +14,10 @@ public class King extends Piece{
         this.isWhite = isWhite;
         this.name = "King";
 
-//        //Scale of piece
-//        this.sprite = sheet.getSubimage(0, isWhite ? 0: sheetScale, sheetScale, sheetScale)
-//                .getScaledInstance(
-//                        (int) (board.tileSize * 0.9),
-//                        (int) (board.tileSize * 0.9),
-//                        BufferedImage.SCALE_SMOOTH
-//                );
-        try {
-            BufferedImage dogImage = ImageIO.read(ClassLoader.getSystemResourceAsStream(isWhite ? "Krol_bialy.png" : "Krol_czarny.png"));
-            this.sprite = dogImage.getScaledInstance(
-                    (int) (board.tileSize * 0.9),
-                    (int) (board.tileSize * 0.9),
-                    BufferedImage.SCALE_SMOOTH );
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        updateSprite();
 
+        //Image of piece
+        this.sprite = PieceSpriteManager.getPieceSprite("King", isWhite, board.tileSize);
     }
     //Special move of King (One square in any direction)
     public boolean isValidMovement(int col, int row) {

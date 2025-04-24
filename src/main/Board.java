@@ -11,8 +11,7 @@ public class Board extends JPanel {
     private JLabel turnLabel;
     private JLabel fenLabel;
     //Size of tile
-    final public int tileSize = 85;
-
+    public int tileSize = 85;
     //Board 8x8
     final int cols = 8;
     final int rows = 8;
@@ -49,6 +48,13 @@ public class Board extends JPanel {
         this.addMouseMotionListener(input);
 
         addPieces();
+    }
+
+    public void updateAllSprites() {
+        for (Piece piece : pieceList) {
+            piece.updateSprite();
+        }
+        repaint();
     }
 
     public Clock getClock() {

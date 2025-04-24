@@ -1,10 +1,7 @@
 package pieces;
 
 import main.Board;
-
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
-import java.io.IOException;
+import main.PieceSpriteManager;
 
 public class Rook extends Piece{
     public Rook(Board board, int col, int row, boolean isWhite){
@@ -16,23 +13,10 @@ public class Rook extends Piece{
         this.isWhite = isWhite;
         this.name = "Rook";
 
-//        //Scale of piece
-//        this.sprite = sheet.getSubimage(4 * sheetScale, isWhite ? 0: sheetScale, sheetScale, sheetScale)
-//                .getScaledInstance(
-//                        (int) (board.tileSize * 0.9),
-//                        (int) (board.tileSize * 0.9),
-//                        BufferedImage.SCALE_SMOOTH
-//                );
+        updateSprite();
 
-        try {
-            BufferedImage dogImage = ImageIO.read(ClassLoader.getSystemResourceAsStream(isWhite ? "Wieza_biala.png" : "Wieza_czarna.png"));
-            this.sprite = dogImage.getScaledInstance(
-                    (int) (board.tileSize * 0.9),
-                    (int) (board.tileSize * 0.9),
-                    BufferedImage.SCALE_SMOOTH );
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        //Image of piece
+        this.sprite = PieceSpriteManager.getPieceSprite("Rook", isWhite, board.tileSize);
     }
 
     //Special move of Rook (only vertically or horizontally)

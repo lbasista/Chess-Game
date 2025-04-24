@@ -10,12 +10,14 @@ import java.io.InputStream;
 public class Main {
     private static JPanel mainMenu;
     private static CardLayout cardLayout;
-    private static Font pixelFont;
+    public static Font pixelFont;
     private static TiledGifPanel background;
-    private static Color backColor = new Color(56, 148, 111);
-    private static Color fontColor = new Color(255, 240, 219);
-    private static Color buttonColor = new Color(63, 185, 136);
-    private static Color buttonBorderColor = new Color(75, 104, 47);
+    public static Color backColor = new Color(56, 148, 111);
+    public static Color fontColor = new Color(255, 240, 219);
+    public static Color buttonColor = new Color(63, 185, 136);
+    public static Color buttonBorderColor = new Color(75, 104, 47);
+    public static Dimension buttonSize = new Dimension(150, 45);
+    public static Board board;
 
     public static void main(String[] args) {
         try {
@@ -65,7 +67,7 @@ public class Main {
         playButton.setForeground(fontColor);
         playButton.setFocusPainted(false);
         playButton.setBorder(BorderFactory.createLineBorder(buttonBorderColor, 3));
-        playButton.setMaximumSize(new Dimension(150, 45));
+        playButton.setMaximumSize(buttonSize);
 
         JButton settingsButton = new JButton("Settings");
         settingsButton.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -75,7 +77,8 @@ public class Main {
         settingsButton.setForeground(fontColor);
         settingsButton.setFocusPainted(false);
         settingsButton.setBorder(BorderFactory.createLineBorder(buttonBorderColor, 3));
-        settingsButton.setMaximumSize(new Dimension(150, 45));
+        settingsButton.setMaximumSize(buttonSize);
+        settingsButton.addActionListener(e -> new SettingsMenu(frame).setVisible(true));
 
         JButton exitButton = new JButton("Exit");
         exitButton.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -85,7 +88,7 @@ public class Main {
         exitButton.setForeground(fontColor);
         exitButton.setFocusPainted(false);
         exitButton.setBorder(BorderFactory.createLineBorder(buttonBorderColor, 3));
-        exitButton.setMaximumSize(new Dimension(150, 45));
+        exitButton.setMaximumSize(buttonSize);
 
         JPanel buttonsPanel = new JPanel();
         buttonsPanel.setLayout(new BoxLayout(buttonsPanel, BoxLayout.Y_AXIS));
@@ -100,7 +103,6 @@ public class Main {
         buttonsPanel.add(Box.createRigidArea(new Dimension(0, 20)));
         buttonsPanel.add(exitButton);
 
-        // Zielony pasek na całą wysokość pod przyciskami, nieco szerszy niż tytuł
         JPanel backBar = new JPanel();
         backBar.setBackground(backColor);
         backBar.setMaximumSize(new Dimension(300, Integer.MAX_VALUE)); // ← szerszy pasek
@@ -108,15 +110,12 @@ public class Main {
         backBar.setAlignmentX(0.5f); // ← wyśrodkowanie w overlayu
         backBar.setOpaque(true);
 
-        // Overlay: pasek pod przyciskami
         JPanel overlayPanel = new JPanel();
         overlayPanel.setLayout(new OverlayLayout(overlayPanel));
         overlayPanel.setOpaque(false);
         overlayPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
         overlayPanel.add(buttonsPanel);
         overlayPanel.add(backBar);
-
-        // Wyśrodkowanie w poziomie
         JPanel centerAlignWrapper = new JPanel();
         centerAlignWrapper.setLayout(new BoxLayout(centerAlignWrapper, BoxLayout.X_AXIS));
         centerAlignWrapper.setOpaque(false);
@@ -138,7 +137,6 @@ public class Main {
 
         Color backColor = new Color(10, 95, 95);
         Color barColor = new Color(100, 95, 95);
-        Color buttonColor = new Color(70, 130, 180);
 
         frame.getContentPane().setBackground(backColor);
         //Fen bar
@@ -181,7 +179,7 @@ public class Main {
         JPanel centerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
         centerPanel.setBackground(backColor);
         //Board
-        Board board = new Board(turnLabel, fenLabel);
+        board = new Board(turnLabel, fenLabel);
         //Space around board
         JPanel boardWrap = new JPanel();
         boardWrap.setBackground(backColor);
@@ -252,7 +250,6 @@ public class Main {
         sideTextPos.gridy = 2;
         rightPanel.add(wClockPanel, sideTextPos);
 
-        //Left panel
         TiledGifPanel leftPanel = new TiledGifPanel("/res/Logo.jpg", 15, false);
         leftPanel.setLayout(new GridBagLayout());
 
@@ -265,13 +262,14 @@ public class Main {
         restartButton.setBackground(buttonColor);
         restartButton.setForeground(Color.WHITE);
 
+        leftPanel.add(restartButton, sideTextPos);
+
         // Ustaw czcionkę po przypisaniu tekstu
         restartButton.setFont(pixelFont);
-        leftPanel.add(restartButton, sideTextPos);
 
         JButton menuButton = new JButton("Menu");
         menuButton.addActionListener(e -> {
-            new InGameMenu(frame, pixelFont,
+            new InGameMenu(frame,
                     () -> {}, //Resume)
                     () -> {}, //Settings)
                     () -> cardLayout.show(mainMenu, "MENU")

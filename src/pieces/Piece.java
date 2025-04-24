@@ -1,11 +1,9 @@
 package pieces;
 
 import main.Board;
+import main.PieceSpriteManager;
 
-import javax.imageio.ImageIO;
 import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.io.IOException;
 
 public class Piece {
     public int col, row;
@@ -13,20 +11,9 @@ public class Piece {
 
     public boolean isWhite;
     public String name;
-    public int value;
 
     public boolean isFirstMove = true;
 
-    BufferedImage sheet;
-    {
-        try{
-            sheet = ImageIO.read(ClassLoader.getSystemResourceAsStream("Chess_Pieces.png"));
-        }
-        catch (IOException e){
-            e.printStackTrace();
-        }
-    }
-    protected int sheetScale = sheet.getWidth()/6;
     Image sprite;
 
     Board board;
@@ -43,5 +30,9 @@ public class Piece {
         int drawX = xPos + (board.tileSize - sprite.getWidth(null)) / 2;
         int drawY = yPos + (board.tileSize - sprite.getHeight(null)) / 2;
         g2d.drawImage(sprite, drawX, drawY, null);
+    }
+
+    public void updateSprite() {
+        this.sprite = PieceSpriteManager.getPieceSprite(name, isWhite, board.tileSize);
     }
 }

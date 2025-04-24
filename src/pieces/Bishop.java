@@ -1,10 +1,7 @@
 package pieces;
 
 import main.Board;
-
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
-import java.io.IOException;
+import main.PieceSpriteManager;
 
 public class Bishop extends Piece{
     public Bishop(Board board, int col, int row, boolean isWhite){
@@ -16,23 +13,10 @@ public class Bishop extends Piece{
         this.isWhite = isWhite;
         this.name = "Bishop";
 
-        //Scale of piece
-//        this.sprite = sheet.getSubimage(2 * sheetScale, isWhite ? 0: sheetScale, sheetScale, sheetScale)
-//                .getScaledInstance(
-//                        (int) (board.tileSize * 0.9),
-//                        (int) (board.tileSize * 0.9),
-//                        BufferedImage.SCALE_SMOOTH
-//                );
+        updateSprite();
 
-        try {
-            BufferedImage dogImage = ImageIO.read(ClassLoader.getSystemResourceAsStream(isWhite ? "Psiskup_bialy.png" : "Psiskup_czarny.png"));
-            this.sprite = dogImage.getScaledInstance(
-                    (int) (board.tileSize * 0.9),
-                    (int) (board.tileSize * 0.9),
-                    BufferedImage.SCALE_SMOOTH );
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        //Image of piece
+        this.sprite = PieceSpriteManager.getPieceSprite("Bishop", isWhite, board.tileSize);
     }
 
     //Special move of Bishop (diagonally)
