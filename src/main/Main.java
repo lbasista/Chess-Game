@@ -15,9 +15,12 @@ public class Main {
     public static Color backColor = new Color(56, 148, 111);
     public static Color fontColor = new Color(255, 240, 219);
     public static Color buttonColor = new Color(63, 185, 136);
+    public static Color greyLockedColor = new Color(132, 126, 135);
     public static Color buttonBorderColor = new Color(75, 104, 47);
     public static Dimension buttonSize = new Dimension(150, 45);
     public static Board board;
+    public static boolean hasStartedGame = false;
+    private static JButton resumeButton;
 
     public static void main(String[] args) {
         try {
@@ -48,7 +51,6 @@ public class Main {
 
     private static JComponent createMenuPanel(JFrame frame) {
         background.setLayout(new BoxLayout(background, BoxLayout.Y_AXIS));
-
         JLabel title = new JLabel("Psiachy");
         title.setAlignmentX(Component.CENTER_ALIGNMENT);
         title.setFont(pixelFont.deriveFont(75f));
@@ -59,15 +61,33 @@ public class Main {
         author.setFont(pixelFont.deriveFont(16f));
         author.setForeground(fontColor);
 
-        JButton playButton = new JButton("Play");
+        JButton playButton = new JButton("New Game");
         playButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         playButton.setFont(pixelFont);
-        playButton.addActionListener(e -> cardLayout.show(mainMenu, "GAME"));
+        playButton.addActionListener(e -> {
+            board.resetGame();
+            cardLayout.show(mainMenu, "GAME");
+        });
         playButton.setBackground(buttonColor);
         playButton.setForeground(fontColor);
         playButton.setFocusPainted(false);
         playButton.setBorder(BorderFactory.createLineBorder(buttonBorderColor, 3));
         playButton.setMaximumSize(buttonSize);
+
+        resumeButton = new JButton("Resume");
+        resumeButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        resumeButton.setFont(pixelFont);
+        resumeButton.addActionListener(e -> {
+            if (hasStartedGame){
+                board.getClock().setPause(false);
+                cardLayout.show(mainMenu, "GAME");
+            }
+        });
+        updateResumeButton();
+        resumeButton.setForeground(fontColor);
+        resumeButton.setFocusPainted(false);
+        resumeButton.setBorder(BorderFactory.createLineBorder(buttonBorderColor, 3));
+        resumeButton.setMaximumSize(buttonSize);
 
         JButton settingsButton = new JButton("Settings");
         settingsButton.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -78,8 +98,7 @@ public class Main {
         settingsButton.setFocusPainted(false);
         settingsButton.setBorder(BorderFactory.createLineBorder(buttonBorderColor, 3));
         settingsButton.setMaximumSize(buttonSize);
-        settingsButton.addActionListener(e -> new SettingsMenu(frame).setVisible(true));
-
+        settingsButton.addActionListener(e -> new SettingsMenu(frame, board).setVisible(true));
         JButton exitButton = new JButton("Exit");
         exitButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         exitButton.setFont(pixelFont);
@@ -99,15 +118,17 @@ public class Main {
         buttonsPanel.add(Box.createRigidArea(new Dimension(0, 50)));
         buttonsPanel.add(playButton);
         buttonsPanel.add(Box.createRigidArea(new Dimension(0, 20)));
+        buttonsPanel.add(resumeButton);
+        buttonsPanel.add(Box.createRigidArea(new Dimension(0, 20)));
         buttonsPanel.add(settingsButton);
         buttonsPanel.add(Box.createRigidArea(new Dimension(0, 20)));
         buttonsPanel.add(exitButton);
 
         JPanel backBar = new JPanel();
         backBar.setBackground(backColor);
-        backBar.setMaximumSize(new Dimension(300, Integer.MAX_VALUE)); // ← szerszy pasek
+        backBar.setMaximumSize(new Dimension(300, Integer.MAX_VALUE));
         backBar.setPreferredSize(new Dimension(275, 0));
-        backBar.setAlignmentX(0.5f); // ← wyśrodkowanie w overlayu
+        backBar.setAlignmentX(0.5f);
         backBar.setOpaque(true);
 
         JPanel overlayPanel = new JPanel();
@@ -132,15 +153,17 @@ public class Main {
         return background;
     }
 
+    private static void updateResumeButton() {
+        if (resumeButton != null) {
+            resumeButton.setEnabled(hasStartedGame);
+            resumeButton.setBackground(hasStartedGame ? buttonColor : greyLockedColor);
+        }
+    }
+
     private static JPanel createGamePanel(JFrame frame) {
         JPanel gamePanel = new JPanel(new BorderLayout());
 
-        Color backColor = new Color(10, 95, 95);
-        Color barColor = new Color(100, 95, 95);
-
         frame.getContentPane().setBackground(backColor);
-        //Fen bar
-        JLabel fenLabel = new JLabel("", SwingConstants.CENTER);
 
         //Minimum window size
         frame.setMinimumSize(new Dimension(1080, 1000));
@@ -168,7 +191,7 @@ public class Main {
 
         //Top panel (info about turn)
         JPanel topPanel = new JPanel(new GridBagLayout());
-        topPanel.setBackground(barColor);
+        topPanel.setBackground(greyLockedColor);
 
         JLabel turnLabel = new JLabel("Current player: White", SwingConstants.CENTER);
         turnLabel.setFont(pixelFont);
@@ -179,21 +202,13 @@ public class Main {
         JPanel centerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
         centerPanel.setBackground(backColor);
         //Board
-        board = new Board(turnLabel, fenLabel);
+        board = new Board(turnLabel);
         //Space around board
         JPanel boardWrap = new JPanel();
         boardWrap.setBackground(backColor);
         boardWrap.setBorder(BorderFactory.createLineBorder(backColor, 20));
         boardWrap.add(board);
         centerPanel.add(boardWrap);
-
-        //Bottom Panel
-        JPanel bottomPanel = new JPanel(new GridBagLayout());
-        bottomPanel.setBackground(barColor);
-        fenLabel.setFont(pixelFont);
-        fenLabel.setForeground(Color.WHITE);
-        //Centered
-        bottomPanel.add(fenLabel, barTextPos);
 
         //Right panel
         TiledGifPanel rightPanel = new TiledGifPanel("/res/Logo.jpg", 15, false);
@@ -264,15 +279,19 @@ public class Main {
 
         leftPanel.add(restartButton, sideTextPos);
 
-        // Ustaw czcionkę po przypisaniu tekstu
         restartButton.setFont(pixelFont);
 
         JButton menuButton = new JButton("Menu");
         menuButton.addActionListener(e -> {
+            Main.board.getClock().setPause(true);
             new InGameMenu(frame,
-                    () -> {}, //Resume)
-                    () -> {}, //Settings)
-                    () -> cardLayout.show(mainMenu, "MENU")
+                    () -> Main.board.getClock().setPause(false),
+                    () -> {}, //Settings
+                    () -> {
+                        Main.board.getClock().setPause(false);
+                        updateResumeButton();
+                        cardLayout.show(mainMenu, "MENU");
+                    }
             ).setVisible(true);
         });
 
@@ -290,25 +309,41 @@ public class Main {
         //Interface
         mainPanel.add(topPanel, BorderLayout.NORTH);
         mainPanel.add(centerPanel, BorderLayout.CENTER);
-        mainPanel.add(bottomPanel, BorderLayout.SOUTH);
         mainPanel.add(rightPanel, BorderLayout.EAST);
         mainPanel.add(leftPanel, BorderLayout.WEST);
 
         //Update clocks
         //White
-        Timer whiteTimer = new Timer(1000, e -> {
-            whiteClock.setText(String.valueOf(board.getClock().getWhiteTime() / 1000));  //In seconds
+        Timer whiteTimer = new Timer(250, e -> {
+            if (board.getClock().isPause()) {
+                whiteClock.setText("Pause");
+            } else {
+                long min = (board.getClock().getWhiteTime() / 1000) / 60; //minutes
+                long sec = (board.getClock().getWhiteTime() / 1000) % 60; //seconds
+                whiteClock.setText(min == 0 ? String.format("%ds", sec) : String.format("%dm %ds", min, sec));
+            }
         });
         whiteTimer.start();
         //Black
-        Timer blackTimer = new Timer(1000, e -> {
-            blackClock.setText(String.valueOf(board.getClock().getBlackTime() / 1000));
+        Timer blackTimer = new Timer(250, e -> {
+            if (board.getClock().isPause()) {
+                blackClock.setText("Pause");
+            } else {
+                long min = (board.getClock().getWhiteTime() / 1000) / 60; //minutes
+                long sec = (board.getClock().getWhiteTime() / 1000) % 60; //seconds
+                blackClock.setText(min == 0 ? String.format("%ds", sec) : String.format("%dm %ds", min, sec));
+            }
         });
         blackTimer.start();
         //Game
-        Timer gameTimer = new Timer(1000, e -> {
-            gameClock.setText(String.valueOf(board.getClock().getTotalGameTime() / 1000));
-            isCheck.setText(board.isCheck ? "Check" : "");
+        Timer gameTimer = new Timer(250, e -> {
+            if (board.getClock().isPause()) {
+                gameClock.setText("Pause");
+            } else {
+                long min = (board.getClock().getTotalGameTime() / 1000) / 60; //minutes
+                long sec = (board.getClock().getTotalGameTime() / 1000) % 60; //seconds
+                gameClock.setText(min == 0 ? String.format("%ds", sec) : String.format("%dm %ds", min, sec));
+            }
         });
         gameTimer.start();
 
@@ -319,7 +354,6 @@ public class Main {
                 int height = frame.getHeight();
 
                 topPanel.setPreferredSize(new Dimension(0, height / 20));
-                bottomPanel.setPreferredSize(new Dimension(0, height / 20));
                 leftPanel.setPreferredSize(new Dimension(width / 8, 0));
                 rightPanel.setPreferredSize(new Dimension(width / 8, 0));
 

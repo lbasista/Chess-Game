@@ -1,21 +1,15 @@
 package main;
 
-import pieces.Piece;
-
 import javax.swing.*;
 import java.awt.*;
 
 public class SettingsMenu extends JDialog {
     private boolean isDogStyle = true;
+    private Board board;
 
-    public class AppSettings {
-        public static boolean useStandardGraphics = false;
-        public static boolean languagePL = false;
-        public static boolean pauseTimeInMenu = false;
-    }
-
-    public SettingsMenu(JFrame parent) {
+    public SettingsMenu(JFrame parent, Board board) {
         super(parent, "Settings", true);
+        this.board = board;
         setSize(400, 300);
         setLocationRelativeTo(parent);
         getContentPane().setBackground(Main.backColor);
@@ -33,28 +27,15 @@ public class SettingsMenu extends JDialog {
             Main.board.updateAllSprites();
         });
 
-        //Language
-        JButton languageButton = new JButton("PL/EN");
-        languageButton.setFont(Main.pixelFont);
-        languageButton.setBackground(Main.buttonColor);
-        languageButton.setForeground(Main.fontColor);
-        languageButton.setMaximumSize(Main.buttonSize);
-        languageButton.setBorder(BorderFactory.createLineBorder(Main.buttonBorderColor, 3));
-        languageButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-        languageButton.addActionListener(e -> {
-            AppSettings.languagePL = languageButton.isSelected();
-            JOptionPane.showMessageDialog(this, "Language switch WIP");
-        });
-
         //Stop timer in menu
         JCheckBox timePause = new JCheckBox("Stop timers in menu");
-        timePause.setSelected(false);
+        timePause.setSelected(board.getClock().isPause());
         timePause.setFont(Main.pixelFont);
         timePause.setForeground(Main.fontColor);
         timePause.setOpaque(false);
         timePause.setAlignmentX(Component.CENTER_ALIGNMENT);
         timePause.addActionListener(e -> {
-            AppSettings.pauseTimeInMenu = timePause.isSelected();
+            board.getClock().setPause(timePause.isSelected());
         });
 
         //Exit settings
@@ -70,15 +51,9 @@ public class SettingsMenu extends JDialog {
         add(Box.createVerticalGlue());
         add(themeToggle);
         add(Box.createRigidArea(new Dimension(0, 20)));
-        add(languageButton);
-        add(Box.createRigidArea(new Dimension(0, 20)));
         add(timePause);
         add(Box.createRigidArea(new Dimension(0, 20)));
         add(backButton);
         add(Box.createVerticalGlue());
-    }
-
-    public boolean isDogStyleSelected() {
-        return isDogStyle;
     }
 }

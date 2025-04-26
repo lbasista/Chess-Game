@@ -9,7 +9,6 @@ import java.util.stream.Collectors;
 
 public class Board extends JPanel {
     private JLabel turnLabel;
-    private JLabel fenLabel;
     //Size of tile
     public int tileSize = 85;
     //Board 8x8
@@ -39,10 +38,9 @@ public class Board extends JPanel {
 
     private Clock clock = new Clock();
 
-    public Board(JLabel turnLabel, JLabel fenLabel){
+    public Board(JLabel turnLabel){
         clock.startGame();
         this.turnLabel = turnLabel;
-        this.fenLabel = fenLabel;
         this.setPreferredSize(new Dimension(cols * tileSize, rows * tileSize));
         this.addMouseListener(input);
         this.addMouseMotionListener(input);
@@ -118,7 +116,6 @@ public class Board extends JPanel {
         if(!isWhiteToMove) {
             fullmoveNumber += 1;
         }
-        fenLabel.setText("FEN: " + toFEN());
     }
 
     private boolean wCanCastleKing = true;
@@ -226,7 +223,6 @@ public class Board extends JPanel {
         if (move.piece.name.equals("King") && Math.abs(move.piece.col - move.newCol) == 2) {
             return isValidCastling(move);
         }
-
         return true;
     }
 
@@ -320,7 +316,7 @@ public class Board extends JPanel {
             return;
         }
 
-        // Sprawdź, czy król ma jakiekolwiek legalne ruchy
+        //Has king legal moves?
         boolean hasLegalMoves = false;
         for (Piece piece : pieceList) {
             if (piece.isWhite == isWhiteToMove) {
@@ -356,8 +352,9 @@ public class Board extends JPanel {
         }
 
         if (isGameOver) {
-            clock.switchTurn(); // Zatrzymaj zegar
-            repaint(); // Wymuś odświeżenie
+            clock.switchTurn();
+            repaint();
+            Main.hasStartedGame = false;
         }
     }
 
@@ -372,82 +369,6 @@ public class Board extends JPanel {
         return names.size() < 3;
     }
 
-    public String toFEN() {
-        StringBuilder fen = new StringBuilder();
-        for (int row = 0; row < 8; row++) {
-            int emptyCount = 0;
-            for (int col = 0; col < 8; col++) {
-                Piece piece = getPiece(col, row);
-                if (piece == null) {
-                    emptyCount += 1;
-                } else {
-                    if (emptyCount > 0) {
-                        fen.append(emptyCount);
-                        emptyCount = 0;
-                    }
-                    //Piece char
-                    fen.append(getFENChar(piece));
-                }
-            }
-            if (emptyCount > 0) {
-                fen.append(emptyCount);
-            }
-            if (row < 7) {
-                fen.append("/");
-            }
-        }
-
-        //White or black player?
-        fen.append(" " + (isWhiteToMove ? "w" : "b"));
-
-        // Castling rights
-        String castlingRights = "";
-        if (wCanCastleKing) {
-            castlingRights += "K";
-        }
-        if (wCanCastleQueen) {
-            castlingRights += "Q";
-        }
-        if (bCanCastleKing) {
-            castlingRights += "k";
-        }
-        if (bCanCastleQueen) {
-            castlingRights += "q";
-        }
-        if (castlingRights.isEmpty()) {
-            castlingRights = "-";
-        }
-        fen.append(" " + castlingRights);
-
-        //enPassant
-        fen.append(" " + enPassantTarget);
-
-        //Half/Fullmoves
-        fen.append(" " + halfmoveClock + " " + fullmoveNumber);
-
-        return fen.toString();
-    }
-
-
-    public char getFENChar(Piece piece) {
-        switch (piece.name) { //White: P, Black: p
-            case "Pawn":
-                return piece.isWhite ? 'P' : 'p';
-            case "Rook":
-                return piece.isWhite ? 'R' : 'r';
-            case "Knight":
-                return piece.isWhite ? 'N' : 'n';
-            case "Bishop":
-                return piece.isWhite ? 'B' : 'b';
-            case "Queen":
-                return piece.isWhite ? 'Q' : 'q';
-            case "King":
-                return piece.isWhite ? 'K' : 'k';
-            default:
-                return ' ';
-        }
-    }
-
     public void resetGame() {
         pieceList.clear();
         addPieces();
@@ -455,10 +376,9 @@ public class Board extends JPanel {
         isGameOver = false;
         selectedPiece = null;
         turnLabel.setText("Current player: White");
-        fenLabel.setText("FEN: " + toFEN());
-        clock = new Clock();
-        clock.startGame();
+        clock.resetClock();
         repaint();
+        Main.hasStartedGame = true; //Unlock resume button
     }
 
     public void paintComponent(Graphics g){

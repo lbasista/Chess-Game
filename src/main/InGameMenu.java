@@ -32,7 +32,7 @@ public class InGameMenu extends JDialog {
         settingsButton.setMaximumSize(Main.buttonSize);
         settingsButton.setFocusPainted(false);
         settingsButton.addActionListener(e -> {
-            new SettingsMenu((JFrame) getParent()).setVisible(true);
+            new SettingsMenu((JFrame) getParent(), Main.board).setVisible(true);
         });
 
         JButton mainMenuButton = new JButton("Main Menu");

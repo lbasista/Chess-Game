@@ -2,10 +2,11 @@ package main;
 
 public class Clock {
     private long gameStartTime;
-    private long whiteTime;
-    private long blackTime;
+    public long whiteTime;
+    public long blackTime;
     private long lastStartTime;
     private boolean whiteTurn;
+    private  boolean pause = false;
 
     public Clock() {
         this.whiteTime = 0;
@@ -32,16 +33,42 @@ public class Clock {
     }
 
     public long getTotalGameTime() {
+        if (pause) {
+            return lastStartTime - gameStartTime;
+        }
         return System.currentTimeMillis() - gameStartTime;
     }
 
     public long getWhiteTime() {
         long now = System.currentTimeMillis();
+        if (pause) {
+            return whiteTime;
+        }
         return whiteTurn ? whiteTime + (now - lastStartTime) : whiteTime;
     }
 
     public long getBlackTime() {
         long now = System.currentTimeMillis();
+        if (pause) {
+            return blackTime;
+        }
         return whiteTurn ? blackTime : blackTime + (now - lastStartTime);
+    }
+
+    public void setPause(boolean pause) {
+        this.pause = pause;
+    }
+
+    public boolean isPause() {
+        return pause;
+    }
+
+    public void resetClock() {
+        this.whiteTime = 0;
+        this.blackTime = 0;
+        this.gameStartTime = System.currentTimeMillis();
+        this.lastStartTime = gameStartTime;
+        this.whiteTurn = true;
+        this.pause = false;
     }
 }
